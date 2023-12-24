@@ -1,2 +1,3 @@
 # go02
-Go, Echo, Bun
+- Go, Echo, Bun
+- Deploy to GKE
