@@ -1,0 +1,55 @@
+version: "3.9"
+services:
+  go02-api:
+    depends_on:
+      - go02-db
+    ports:
+      - 8080:8080
+    build:
+      context: .
+      target: debug
+    restart: always
+    container_name: "go02-api"
+    env_file: .env
+    volumes:
+      - .:/app
+    tty: true
+
+  go02-db:
+    image: postgres:16-bookworm
+    container_name: go02-db
+    restart: unless-stopped
+    ports:
+      - 15432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      timeout: 20s
+      interval: 3s
+      retries: 3
+
+  go02-db-migration:
+    depends_on:
+      go02-db:
+        condition: service_healthy
+    build:
+      context: db-migration
+    container_name: go02-db-migration
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./db-migration:/root/migration
+    entrypoint: ["/bin/sh", "scripts/migrate_local.sh"]
+    command: up
+
+volumes:
+  db-data:
