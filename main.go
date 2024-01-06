@@ -1,16 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"go02/interface/router"
+	"go02/middleware"
 	"go02/packages/db"
+	"go02/packages/logger"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
+
+	logger.Init()
 
 	db, err := db.OpenDB()
 	if err != nil {
@@ -30,8 +35,9 @@ func main() {
 		Handler: e,
 	}
 
-	log.Printf("listening on port %s", port)
+	slog.Info(fmt.Sprintf("listening on port %s", port))
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
+
 }
