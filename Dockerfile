@@ -25,6 +25,6 @@ RUN go build -o "go02" -ldflags="-w -s"
 # runtime continer
 FROM gcr.io/distroless/base-debian12
 
-COPY --from=builder /tmp/app/build/go02 /root/go02
+COPY --from=builder /tmp/app/go02 /root/go02
 
 CMD ["/root/go02"]
