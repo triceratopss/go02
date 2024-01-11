@@ -6,9 +6,8 @@ on:
       - main
 
 env:
-  ARTIFACT_HOST: asia-docker.pkg.dev
-  ARTIFACT_REPO: go02
-  SERVICE_NAME: go02
+  APP_IMAGE_NAME: ${{ vars.ARTIFACT_HOST }}/${{ secrets.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/${{ vars.SERVICE_NAME }}:${{ github.sha }}
+  MIGRATION_IMAGE_NAME: ${{ vars.ARTIFACT_HOST }}/${{ secrets.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/${{ vars.MIGRATION_SERVICE_NAME }}:${{ github.sha }}
 
 jobs:
   build-and-push:
@@ -28,9 +27,12 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.ARTIFACT_HOST }}
 
-      - name: Build and push Docker image
-        env:
-          IMAGE: ${{ env.ARTIFACT_HOST }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+      - name: Build and push App image
         run: |
-          docker build -t $IMAGE .
-          docker push $IMAGE
+          docker build -t $APP_IMAGE_NAME .
+          docker push $APP_IMAGE_NAME
+
+      - name: Build and push Migration image
+        run: |
+          docker build -t $MIGRATION_IMAGE_NAME ./db-migration
+          docker push $MIGRATION_IMAGE_NAME
