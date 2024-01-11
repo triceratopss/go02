@@ -10,7 +10,17 @@ import (
 )
 
 func Logger() echo.MiddlewareFunc {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			switch a.Key {
+			case slog.LevelKey:
+				return slog.String("severity", a.Value.String())
+			case slog.MessageKey:
+				return slog.String("message", a.Value.String())
+			}
+			return a
+		},
+	}))
 	return echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
 		LogMethod:       true,
 		LogURI:          true,
