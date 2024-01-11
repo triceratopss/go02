@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net"
 	"os"
 	"time"
 
@@ -74,7 +73,6 @@ func Logger() echo.MiddlewareFunc {
 					ResponseSize:  fmt.Sprintf("%d", v.ResponseSize),
 					UserAgent:     v.UserAgent,
 					RemoteIP:      v.RemoteIP,
-					ServerIP:      getServerIP(),
 					Referer:       v.Referer,
 					Latency:       MakeDuration(v.Latency),
 					Protocol:      v.Protocol,
@@ -91,7 +89,6 @@ func Logger() echo.MiddlewareFunc {
 					ResponseSize:  fmt.Sprintf("%d", v.ResponseSize),
 					UserAgent:     v.UserAgent,
 					RemoteIP:      v.RemoteIP,
-					ServerIP:      getServerIP(),
 					Referer:       v.Referer,
 					Latency:       MakeDuration(v.Latency),
 					Protocol:      v.Protocol,
@@ -105,25 +102,4 @@ func Logger() echo.MiddlewareFunc {
 			return nil
 		},
 	})
-}
-
-func getServerIP() string {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return ""
-	}
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
-		if err != nil {
-			return ""
-		}
-		for _, addr := range addrs {
-			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				if ipnet.IP.To4() != nil {
-					return ipnet.IP.String()
-				}
-			}
-		}
-	}
-	return ""
 }
