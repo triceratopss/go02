@@ -44,8 +44,6 @@ func Logger() echo.MiddlewareFunc {
 			switch a.Key {
 			case slog.LevelKey:
 				return slog.String("severity", a.Value.String())
-			case slog.MessageKey:
-				return slog.String("message", a.Value.String())
 			}
 			return a
 		},
