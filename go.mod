@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/lib/pq v1.10.9
+	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/uptrace/bun v1.1.16
 	github.com/uptrace/bun/dialect/pgdialect v1.1.16
