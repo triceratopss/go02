@@ -10,21 +10,29 @@ import (
 
 // UserUsecase User 関係のusecaseのinterface
 type UserUsecase interface {
-	CreateUser(ctx context.Context, name string, age int) error
-	UpdateUser(ctx context.Context, ID int, name string, age int) error
+	CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error
+	UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error
 	DeleteUser(ctx context.Context, ID int) error
 	GetUserList(ctx context.Context, limit int, offset int) (ResGetUserList, error)
 	GetUserOne(ctx context.Context, ID int) (ResGetUser, error)
 }
 
 type userUsecase struct {
-	userRepo repository.UserRepository
+	transactionRepository repository.TransactionRepository
+	userRepository        repository.UserRepository
+	profileRepository     repository.ProfileRepository
 }
 
 // NewUserUsecase User usecaseのコンストラクタ
-func NewUserUsecase(userRepo repository.UserRepository) UserUsecase {
+func NewUserUsecase(
+	transactionRepository repository.TransactionRepository,
+	userRepository repository.UserRepository,
+	profileRepository repository.ProfileRepository,
+) UserUsecase {
 	return &userUsecase{
-		userRepo: userRepo,
+		transactionRepository: transactionRepository,
+		userRepository:        userRepository,
+		profileRepository:     profileRepository,
 	}
 }
 
@@ -45,15 +53,24 @@ type ResGetUser struct {
 	Age  int    `json:"age"`
 }
 
-// CreateUser User を追加する
-func (u *userUsecase) CreateUser(ctx context.Context, name string, age int) error {
+func (u *userUsecase) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
 
 	user, err := model.NewUser(name, age)
 	if err != nil {
 		return err
 	}
 
-	_, err = u.userRepo.Create(ctx, user)
+	_, err = u.userRepository.Create(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	profile, err := model.NewProfile(user.ID, bio, avatarURL)
+	if err != nil {
+		return err
+	}
+
+	_, err = u.profileRepository.Create(ctx, profile)
 	if err != nil {
 		return err
 	}
@@ -61,16 +78,30 @@ func (u *userUsecase) CreateUser(ctx context.Context, name string, age int) erro
 	return nil
 }
 
-// UpdateUser User を更新する
-func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age int) error {
+func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
 
-	user := model.User{
-		ID:   ID,
-		Name: name,
-		Age:  age,
+	user, err := u.userRepository.GetOne(ctx, ID)
+	if err != nil {
+		return err
 	}
 
-	err := u.userRepo.Update(ctx, &user)
+	user.Name = name
+	user.Age = age
+
+	err = u.userRepository.Update(ctx, &user)
+	if err != nil {
+		return err
+	}
+
+	profile, err := u.profileRepository.GetProfileByUserID(ctx, ID)
+	if err != nil {
+		return err
+	}
+
+	profile.Bio = bio
+	profile.AvatarURL = avatarURL
+
+	err = u.profileRepository.Update(ctx, &profile)
 	if err != nil {
 		return err
 	}
@@ -78,10 +109,9 @@ func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age i
 	return nil
 }
 
-// // DeleteUser User を削除する
 func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
 
-	err := u.userRepo.Delete(ctx, ID)
+	err := u.userRepository.Delete(ctx, ID)
 	if err != nil {
 		return err
 	}
@@ -89,7 +119,6 @@ func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
 	return nil
 }
 
-// GetUserList User を複数件取得する
 func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (ResGetUserList, error) {
 	var resUsers ResGetUserList
 
@@ -99,7 +128,7 @@ func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (R
 		l = 100
 	}
 
-	users, err := u.userRepo.GetList(ctx, l, offset)
+	users, err := u.userRepository.GetList(ctx, l, offset)
 	if err != nil {
 		return resUsers, err
 	}
@@ -117,11 +146,10 @@ func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (R
 	return resUsers, nil
 }
 
-// // GetUserList User を1件取得する
 func (u *userUsecase) GetUserOne(ctx context.Context, ID int) (ResGetUser, error) {
 	var resUser ResGetUser
 
-	user, err := u.userRepo.GetOne(ctx, ID)
+	user, err := u.userRepository.GetOne(ctx, ID)
 	if err != nil {
 		return resUser, err
 	}

@@ -11,8 +11,10 @@ import (
 
 func Init(e *echo.Echo, db *bun.DB) {
 
+	transactionRepository := repository.NewTransactionRepository(db)
 	userRepository := repository.NewUserRepository(db)
-	userUsecase := usecase.NewUserUsecase(userRepository)
+	profileRepository := repository.NewProfileRepository(db)
+	userUsecase := usecase.NewUserUsecase(transactionRepository, userRepository, profileRepository)
 	userHandler := handler.NewUserHandler(userUsecase)
 
 	e.POST("/users", userHandler.CreateUser)
