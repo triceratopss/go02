@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"go02/model"
+	"go02/packages/db"
 
 	"github.com/uptrace/bun"
 )
@@ -27,7 +28,9 @@ func NewUserRepository(conn *bun.DB) UserRepository {
 
 // Create Userの新規作成
 func (r *userRepository) Create(ctx context.Context, user *model.User) (int, error) {
-	_, err := r.conn.NewInsert().Model(user).Exec(ctx)
+
+	tx := db.GetTxOrDB(ctx, r.conn)
+	_, err := tx.NewInsert().Model(user).Exec(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -37,7 +40,9 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) (int, err
 
 // Update Userの更新
 func (r *userRepository) Update(ctx context.Context, user *model.User) error {
-	_, err := r.conn.NewUpdate().Model(user).WherePK().Exec(ctx)
+
+	tx := db.GetTxOrDB(ctx, r.conn)
+	_, err := tx.NewUpdate().Model(user).WherePK().Exec(ctx)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"go02/model"
+	"go02/packages/db"
 
 	"github.com/uptrace/bun"
 )
@@ -25,7 +26,9 @@ func NewProfileRepository(conn *bun.DB) ProfileRepository {
 }
 
 func (r *profileRepository) Create(ctx context.Context, profile *model.Profile) (int, error) {
-	_, err := r.conn.NewInsert().Model(profile).Exec(ctx)
+
+	tx := db.GetTxOrDB(ctx, r.conn)
+	_, err := tx.NewInsert().Model(profile).Exec(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -34,7 +37,9 @@ func (r *profileRepository) Create(ctx context.Context, profile *model.Profile) 
 }
 
 func (r *profileRepository) Update(ctx context.Context, profile *model.Profile) error {
-	_, err := r.conn.NewUpdate().Model(profile).WherePK().Exec(ctx)
+
+	tx := db.GetTxOrDB(ctx, r.conn)
+	_, err := tx.NewUpdate().Model(profile).WherePK().Exec(ctx)
 	if err != nil {
 		return err
 	}
@@ -54,7 +59,7 @@ func (r *profileRepository) Delete(ctx context.Context, profileID int) error {
 func (r *profileRepository) GetProfileByUserID(ctx context.Context, userID int) (model.Profile, error) {
 	var profile model.Profile
 
-	if err := r.conn.NewSelect().Model(&profile).Where("id = ?", userID).Scan(ctx); err != nil {
+	if err := r.conn.NewSelect().Model(&profile).Where("user_id = ?", userID).Scan(ctx); err != nil {
 		return profile, err
 	}
 

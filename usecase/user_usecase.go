@@ -55,22 +55,29 @@ type ResGetUser struct {
 
 func (u *userUsecase) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
 
-	user, err := model.NewUser(name, age)
-	if err != nil {
-		return err
-	}
+	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
+		user, err := model.NewUser(name, age)
+		if err != nil {
+			return err
+		}
 
-	_, err = u.userRepository.Create(ctx, user)
-	if err != nil {
-		return err
-	}
+		_, err = u.userRepository.Create(ctx, user)
+		if err != nil {
+			return err
+		}
 
-	profile, err := model.NewProfile(user.ID, bio, avatarURL)
-	if err != nil {
-		return err
-	}
+		profile, err := model.NewProfile(user.ID, bio, avatarURL)
+		if err != nil {
+			return err
+		}
 
-	_, err = u.profileRepository.Create(ctx, profile)
+		_, err = u.profileRepository.Create(ctx, profile)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -80,28 +87,35 @@ func (u *userUsecase) CreateUser(ctx context.Context, name string, age int, bio 
 
 func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
 
-	user, err := u.userRepository.GetOne(ctx, ID)
-	if err != nil {
-		return err
-	}
+	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
+		user, err := u.userRepository.GetOne(ctx, ID)
+		if err != nil {
+			return err
+		}
 
-	user.Name = name
-	user.Age = age
+		user.Name = name
+		user.Age = age
 
-	err = u.userRepository.Update(ctx, &user)
-	if err != nil {
-		return err
-	}
+		err = u.userRepository.Update(ctx, &user)
+		if err != nil {
+			return err
+		}
 
-	profile, err := u.profileRepository.GetProfileByUserID(ctx, ID)
-	if err != nil {
-		return err
-	}
+		profile, err := u.profileRepository.GetProfileByUserID(ctx, ID)
+		if err != nil {
+			return err
+		}
 
-	profile.Bio = bio
-	profile.AvatarURL = avatarURL
+		profile.Bio = bio
+		profile.AvatarURL = avatarURL
 
-	err = u.profileRepository.Update(ctx, &profile)
+		err = u.profileRepository.Update(ctx, &profile)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}
