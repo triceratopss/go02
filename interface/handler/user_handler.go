@@ -32,8 +32,10 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var params struct {
-		Name string `json:"name"`
-		Age  int    `json:"age"`
+		Name      string `json:"name"`
+		Age       int    `json:"age"`
+		Bio       string `json:"bio"`
+		AvatarURL string `json:"avatar_url"`
 	}
 
 	if err := c.Bind(&params); err != nil {
@@ -42,7 +44,7 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 		})
 	}
 
-	err := h.userUsecase.CreateUser(ctx, params.Name, params.Age)
+	err := h.userUsecase.CreateUser(ctx, params.Name, params.Age, params.Bio, params.AvatarURL)
 	if err != nil {
 		fmt.Println(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
@@ -66,8 +68,10 @@ func (h *userHandler) UpdateUser(c echo.Context) error {
 	}
 
 	var params struct {
-		Name string `json:"name"`
-		Age  int    `json:"age"`
+		Name      string `json:"name"`
+		Age       int    `json:"age"`
+		Bio       string `json:"bio"`
+		AvatarURL string `json:"avatar_url"`
 	}
 
 	if err := c.Bind(&params); err != nil {
@@ -76,7 +80,7 @@ func (h *userHandler) UpdateUser(c echo.Context) error {
 		})
 	}
 
-	if err := h.userUsecase.UpdateUser(ctx, id, params.Name, params.Age); err != nil {
+	if err := h.userUsecase.UpdateUser(ctx, id, params.Name, params.Age, params.Bio, params.AvatarURL); err != nil {
 		fmt.Println(err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to update user",

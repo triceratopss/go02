@@ -1,17 +1,17 @@
-FROM golang:1.21-bookworm AS debug
+FROM golang:1.22-bookworm AS debug
 
 WORKDIR /app
 
 COPY ./go.* /app/
 RUN go mod download
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/air-verse/air@latest
 
 COPY . /app
 
-CMD ["air"]
+CMD ["air", "-c", ".air.toml"]
 
 # build continer
-FROM golang:1.21-bookworm AS builder
+FROM golang:1.22-bookworm AS builder
 
 WORKDIR /tmp/app
 
