@@ -1,4 +1,3 @@
--- create "users" table
 CREATE TABLE users (
   id BIGSERIAL NOT NULL,
   name VARCHAR(255) NOT NULL DEFAULT 'unknown',
