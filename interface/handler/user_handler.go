@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
+	"go02/packages/logging"
 	"go02/usecase"
 
 	"github.com/labstack/echo/v4"
@@ -39,6 +39,7 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 	}
 
 	if err := c.Bind(&params); err != nil {
+		logging.Errorf(err, "failed to bind request body: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "bad request",
 		})
@@ -46,7 +47,7 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 
 	err := h.userUsecase.CreateUser(ctx, params.Name, params.Age, params.Bio, params.AvatarURL)
 	if err != nil {
-		fmt.Println(err.Error())
+		logging.Errorf(err, "failed to CreateUser: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to create user",
 		})
@@ -62,6 +63,7 @@ func (h *userHandler) UpdateUser(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		logging.Errorf(err, "failed to parse id: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "invalid id",
 		})
@@ -75,13 +77,14 @@ func (h *userHandler) UpdateUser(c echo.Context) error {
 	}
 
 	if err := c.Bind(&params); err != nil {
+		logging.Errorf(err, "failed to bind request body: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "bad request",
 		})
 	}
 
 	if err := h.userUsecase.UpdateUser(ctx, id, params.Name, params.Age, params.Bio, params.AvatarURL); err != nil {
-		fmt.Println(err.Error())
+		logging.Errorf(err, "failed to UpdateUser: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to update user",
 		})
@@ -97,13 +100,14 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		logging.Errorf(err, "failed to parse id: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "invalid id",
 		})
 	}
 
 	if err := h.userUsecase.DeleteUser(ctx, id); err != nil {
-		fmt.Println(err.Error())
+		logging.Errorf(err, "failed to DeleteUser: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to delete user",
 		})
@@ -123,6 +127,7 @@ func (h *userHandler) GetUserList(c echo.Context) error {
 	}
 
 	if err := c.Bind(&params); err != nil {
+		logging.Errorf(err, "failed to bind query params: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "bad request",
 		})
@@ -130,7 +135,7 @@ func (h *userHandler) GetUserList(c echo.Context) error {
 
 	resUsers, err := h.userUsecase.GetUserList(ctx, params.Limit, params.Offset)
 	if err != nil {
-		fmt.Println(err.Error())
+		logging.Errorf(err, "failed to GetUserList: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "bad request",
 		})
@@ -144,6 +149,7 @@ func (h *userHandler) GetUserOne(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		logging.Errorf(err, "failed to parse id: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "invalid id",
 		})
@@ -151,7 +157,7 @@ func (h *userHandler) GetUserOne(c echo.Context) error {
 
 	resUser, err := h.userUsecase.GetUserOne(ctx, id)
 	if err != nil {
-		fmt.Println(err.Error())
+		logging.Errorf(err, "failed to GetUserOne: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to get user",
 		})

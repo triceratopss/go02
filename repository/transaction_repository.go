@@ -39,7 +39,7 @@ func (r *transactionRepository) WithinTransaction(ctx context.Context, f func(ct
 	err = f(db.SetTx(ctx, &tx))
 	if err != nil {
 		tx.Rollback()
-		return errors.WithStack(err)
+		return err
 	}
 
 	return errors.WithStack(tx.Commit())
