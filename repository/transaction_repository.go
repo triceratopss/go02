@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"go02/packages/db"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/uptrace/bun"
 )
 
@@ -39,7 +39,7 @@ func (r *transactionRepository) WithinTransaction(ctx context.Context, f func(ct
 	err = f(db.SetTx(ctx, &tx))
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.WithStack(err)
 	}
 
 	return errors.WithStack(tx.Commit())
