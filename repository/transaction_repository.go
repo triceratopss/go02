@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"go02/packages/db"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/uptrace/bun"
 )
 
