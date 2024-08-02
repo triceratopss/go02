@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"go02/model"
+	"go02/packages/apperrors"
 	"go02/repository"
 
 	"github.com/samber/lo"
@@ -58,28 +59,28 @@ func (u *userUsecase) CreateUser(ctx context.Context, name string, age int, bio 
 	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := model.NewUser(name, age)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		_, err = u.userRepository.Create(ctx, user)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		profile, err := model.NewProfile(user.ID, bio, avatarURL)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		_, err = u.profileRepository.Create(ctx, profile)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return err
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -90,7 +91,7 @@ func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age i
 	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := u.userRepository.GetOne(ctx, ID)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		user.Name = name
@@ -98,12 +99,12 @@ func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age i
 
 		err = u.userRepository.Update(ctx, &user)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		profile, err := u.profileRepository.GetProfileByUserID(ctx, ID)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		profile.Bio = bio
@@ -111,13 +112,13 @@ func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age i
 
 		err = u.profileRepository.Update(ctx, &profile)
 		if err != nil {
-			return err
+			return apperrors.WithStack(err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		return err
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -127,7 +128,7 @@ func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
 
 	err := u.userRepository.Delete(ctx, ID)
 	if err != nil {
-		return err
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -144,7 +145,7 @@ func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (R
 
 	users, err := u.userRepository.GetList(ctx, l, offset)
 	if err != nil {
-		return resUsers, err
+		return resUsers, apperrors.WithStack(err)
 	}
 
 	resUsers = ResGetUserList{
@@ -165,7 +166,7 @@ func (u *userUsecase) GetUserOne(ctx context.Context, ID int) (ResGetUser, error
 
 	user, err := u.userRepository.GetOne(ctx, ID)
 	if err != nil {
-		return resUser, err
+		return resUser, apperrors.WithStack(err)
 	}
 
 	resUser = ResGetUser{

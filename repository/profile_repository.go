@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"go02/model"
+	"go02/packages/apperrors"
 	"go02/packages/db"
 
-	"github.com/cockroachdb/errors"
 	"github.com/uptrace/bun"
 )
 
@@ -31,7 +31,7 @@ func (r *profileRepository) Create(ctx context.Context, profile *model.Profile) 
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewInsert().Model(profile).Exec(ctx)
 	if err != nil {
-		return 0, errors.WithStack(err)
+		return 0, apperrors.WithStack(err)
 	}
 
 	return profile.ID, nil
@@ -42,7 +42,7 @@ func (r *profileRepository) Update(ctx context.Context, profile *model.Profile) 
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewUpdate().Model(profile).WherePK().Exec(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -51,7 +51,7 @@ func (r *profileRepository) Update(ctx context.Context, profile *model.Profile) 
 func (r *profileRepository) Delete(ctx context.Context, profileID int) error {
 	_, err := r.conn.NewDelete().Model(&model.Profile{}).Where("id = ?", profileID).Exec(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (r *profileRepository) GetProfileByUserID(ctx context.Context, userID int) 
 	var profile model.Profile
 
 	if err := r.conn.NewSelect().Model(&profile).Where("user_id = ?", userID).Scan(ctx); err != nil {
-		return model.Profile{}, errors.WithStack(err)
+		return model.Profile{}, apperrors.WithStack(err)
 	}
 
 	return profile, nil

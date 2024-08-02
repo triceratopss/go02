@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"go02/packages/apperrors"
 	"go02/packages/db"
 
 	"github.com/cockroachdb/errors"
@@ -26,12 +27,12 @@ type transactionRepository struct {
 func (r *transactionRepository) WithinTransaction(ctx context.Context, f func(ctx context.Context) error) (err error) {
 	tx, err := db.GetTxOrDB(ctx, r.conn).BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
-		return errors.WithStack(err)
+		return apperrors.WithStack(err)
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.WithStack(errors.Errorf("panic error %v", r))
+			err = apperrors.WithStack(errors.Errorf("panic error %v", r))
 			tx.Rollback()
 		}
 	}()
@@ -39,8 +40,8 @@ func (r *transactionRepository) WithinTransaction(ctx context.Context, f func(ct
 	err = f(db.SetTx(ctx, &tx))
 	if err != nil {
 		tx.Rollback()
-		return err
+		return apperrors.WithStack(err)
 	}
 
-	return errors.WithStack(tx.Commit())
+	return apperrors.WithStack(tx.Commit())
 }

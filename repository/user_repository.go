@@ -34,7 +34,7 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) (int, err
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewInsert().Model(user).Exec(ctx)
 	if err != nil {
-		return 0, errors.WithStack(err)
+		return 0, apperrors.WithStack(err)
 	}
 
 	return user.ID, nil
@@ -46,7 +46,7 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewUpdate().Model(user).WherePK().Exec(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 func (r *userRepository) Delete(ctx context.Context, userID int) error {
 	_, err := r.conn.NewDelete().Model(&model.User{}).Where("id = ?", userID).Exec(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return apperrors.WithStack(err)
 	}
 
 	return nil
@@ -71,7 +71,7 @@ func (r *userRepository) GetList(ctx context.Context, limit int, offset int) ([]
 	}
 
 	if len(users) == 0 {
-		return []model.User{}, errors.WithStack(apperrors.ErrNotFound)
+		return []model.User{}, apperrors.WithStack(apperrors.ErrNotFound)
 	}
 
 	return users, nil
@@ -82,7 +82,7 @@ func (r *userRepository) GetOne(ctx context.Context, userID int) (model.User, er
 	var user model.User
 
 	if err := r.conn.NewSelect().Model(&user).Where("id = ?", userID).Scan(ctx); err != nil {
-		return model.User{}, errors.WithStack(err)
+		return model.User{}, apperrors.WithStack(err)
 	}
 
 	return user, nil
