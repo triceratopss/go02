@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -15,4 +16,12 @@ func ReadJSONFile(t *testing.T, filePath string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+func MapToJSONString(m map[string]any) (string, error) {
+	jsonBytes, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
 }

@@ -24,10 +24,10 @@ type Item struct {
 }
 
 func TestGetUserList(t *testing.T) {
-
 	tests := []struct {
 		name             string
 		queryParams      map[string]string
+		wantError        bool
 		expectedStatus   int
 		expectedFilePath string
 		testData         []model.User
@@ -35,6 +35,7 @@ func TestGetUserList(t *testing.T) {
 		{
 			name:             "正常系: アイテムが存在する場合",
 			queryParams:      nil,
+			wantError:        false,
 			expectedStatus:   http.StatusOK,
 			expectedFilePath: "testdata/get_users/ok_res.golden.json",
 			testData: []model.User{
@@ -45,8 +46,32 @@ func TestGetUserList(t *testing.T) {
 		{
 			name:             "正常系: アイテムが存在しない場合",
 			queryParams:      nil,
+			wantError:        false,
 			expectedStatus:   http.StatusOK,
 			expectedFilePath: "testdata/get_users/ok_res_empty.golden.json",
+			testData:         []model.User{},
+		},
+		{
+			name:             "正常系: アイテムが存在し、クエリパラメータが指定されている場合",
+			queryParams:      map[string]string{"limit": "3", "offset": "2"},
+			wantError:        false,
+			expectedStatus:   http.StatusOK,
+			expectedFilePath: "testdata/get_users/ok_res_query_param.golden.json",
+			testData: []model.User{
+				{ID: 1, Name: "taro", Age: 24},
+				{ID: 2, Name: "takeshi", Age: 20},
+				{ID: 3, Name: "hanako", Age: 21},
+				{ID: 4, Name: "kana", Age: 27},
+				{ID: 5, Name: "yuki", Age: 18},
+				{ID: 6, Name: "ichiro", Age: 30},
+			},
+		},
+		{
+			name:             "異常系: クエリパラメータの値が不正な場合",
+			queryParams:      map[string]string{"limit": "a", "offset": "b"},
+			wantError:        true,
+			expectedStatus:   http.StatusBadRequest,
+			expectedFilePath: "testdata/get_users/err_res_400.golden.json",
 			testData:         []model.User{},
 		},
 	}
@@ -78,7 +103,7 @@ func TestGetUserList(t *testing.T) {
 			for k, v := range tt.queryParams {
 				q.Set(k, v)
 			}
-			req := httptest.NewRequest(http.MethodGet, "/users"+q.Encode(), nil)
+			req := httptest.NewRequest(http.MethodGet, "/users?"+q.Encode(), nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 
@@ -89,14 +114,27 @@ func TestGetUserList(t *testing.T) {
 			userHandler := handler.NewUserHandler(userUsecase)
 
 			// Act
-			if err := userHandler.GetUserList(c); err != nil {
-				t.Fatal(err)
-			}
+			err = userHandler.GetUserList(c)
 
 			// Assert
-			assert.Equal(t, tt.expectedStatus, rec.Code)
+			var actualJSON string
 
-			actualJSON := rec.Body.String()
+			if tt.wantError {
+				assert.Error(t, err)
+				he, ok := err.(*echo.HTTPError)
+				assert.True(t, ok)
+				assert.Equal(t, tt.expectedStatus, he.Code)
+
+				errorResponse, ok := he.Message.(map[string]any)
+				assert.True(t, ok)
+				actualJSON, err = testutils.MapToJSONString(errorResponse)
+				assert.NoError(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedStatus, rec.Code)
+
+				actualJSON = rec.Body.String()
+			}
 
 			expectedJSON, err := testutils.ReadJSONFile(t, tt.expectedFilePath)
 			if err != nil {

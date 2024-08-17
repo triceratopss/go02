@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "id": 3,
+      "name": "hanako",
+      "age": 21
+    },
+    {
+      "id": 4,
+      "name": "kana",
+      "age": 27
+    },
+    {
+      "id": 5,
+      "name": "yuki",
+      "age": 18
+    }
+  ]
+}
