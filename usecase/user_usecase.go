@@ -135,7 +135,9 @@ func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
 }
 
 func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (ResGetUserList, error) {
-	var resUsers ResGetUserList
+	resUsers := ResGetUserList{
+		Users: []ResGetUser{},
+	}
 
 	// limit default is 100
 	l := limit
