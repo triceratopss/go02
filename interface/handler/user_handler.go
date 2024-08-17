@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
+	"go02/packages/apperrors"
 	"go02/packages/logging"
 	"go02/usecase"
 
@@ -129,15 +131,15 @@ func (h *userHandler) GetUserList(c echo.Context) error {
 	if err := c.Bind(&params); err != nil {
 		logging.Errorf(err, "failed to bind query params: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"message": "bad request",
+			"message": http.StatusText(http.StatusBadRequest),
 		})
 	}
 
 	resUsers, err := h.userUsecase.GetUserList(ctx, params.Limit, params.Offset)
-	if err != nil {
+	if err != nil && !errors.Is(err, apperrors.ErrNotFound) {
 		logging.Errorf(err, "failed to GetUserList: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
-			"message": "bad request",
+		return echo.NewHTTPError(http.StatusInternalServerError, map[string]any{
+			"message": http.StatusText(http.StatusInternalServerError),
 		})
 	}
 
