@@ -122,8 +122,8 @@ func (h *userHandler) GetUserList(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var params struct {
-		Limit  int `query:"name"`
-		Offset int `query:"age"`
+		Limit  int `query:"limit"`
+		Offset int `query:"offset"`
 	}
 
 	if err := c.Bind(&params); err != nil {
