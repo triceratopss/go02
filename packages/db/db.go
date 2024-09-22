@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
+	"go02/packages/config"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -17,13 +17,13 @@ import (
 
 func OpenDB() (*bun.DB, error) {
 
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	name := os.Getenv("DB_NAME")
-	user := os.Getenv("DB_USER")
-	pass := os.Getenv("DB_PASSWORD")
-
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, pass, host, port, name)
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		config.Config.DBUser,
+		config.Config.DBPassword,
+		config.Config.DBHost,
+		config.Config.DBPort,
+		config.Config.DBName,
+	)
 	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

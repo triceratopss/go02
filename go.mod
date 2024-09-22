@@ -3,6 +3,7 @@ module go02
 go 1.21
 
 require (
+	github.com/caarlos0/env/v11 v11.2.2
 	github.com/cockroachdb/errors v1.11.3
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/labstack/echo/v4 v4.11.1
