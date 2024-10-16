@@ -1,6 +1,6 @@
 FROM migrate/migrate
 
-RUN apk add -no-cache jq
+RUN apk add --no-cache jq
 
 WORKDIR /root/migration
 
