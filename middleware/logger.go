@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"time"
@@ -55,6 +54,8 @@ func Logger() echo.MiddlewareFunc {
 		LogError:         true,
 		HandleError:      true,
 		LogValuesFunc: func(c echo.Context, v echomiddleware.RequestLoggerValues) error {
+			ctx := c.Request().Context()
+
 			if v.Error == nil {
 				httpRequest := HTTPRequest{
 					RequestMethod: v.Method,
@@ -68,7 +69,7 @@ func Logger() echo.MiddlewareFunc {
 					Latency:       MakeDuration(v.Latency),
 					Protocol:      v.Protocol,
 				}
-				logger.LogAttrs(context.Background(), slog.LevelInfo, "request",
+				logger.LogAttrs(ctx, slog.LevelInfo, "request",
 					slog.Any("httpRequest", httpRequest),
 				)
 			} else {
@@ -84,7 +85,7 @@ func Logger() echo.MiddlewareFunc {
 					Latency:       MakeDuration(v.Latency),
 					Protocol:      v.Protocol,
 				}
-				logger.LogAttrs(context.Background(), slog.LevelError, "request error",
+				logger.LogAttrs(ctx, slog.LevelError, "request error",
 					slog.Any("httpRequest", httpRequest),
 					slog.Any("err", v.Error.Error()),
 				)
