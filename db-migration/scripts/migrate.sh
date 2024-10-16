@@ -8,6 +8,11 @@ chmod +x cloud-sql-proxy
 
 ./cloud-sql-proxy ${INSTANCE_CONNECTION_NAME} & sleep 2;
 
-URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?search_path=public&sslmode=disable"
+urlencode() {
+    jq -nr --arg v "$1" '$v|@uri'
+}
+
+ENCODED_PASSWORD=$(urlencode ${DB_PASSWORD})
+URL="postgres://${DB_USER}:${ENCODED_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?search_path=public&sslmode=disable"
 
 migrate -source file://../migrations -database ${URL} "$@"
