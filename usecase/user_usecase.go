@@ -4,7 +4,9 @@ import (
 	"context"
 	"go02/model"
 	"go02/packages/apperrors"
+	"go02/packages/logging"
 	"go02/repository"
+	"log/slog"
 
 	"github.com/samber/lo"
 	"go.opentelemetry.io/otel"
@@ -164,6 +166,8 @@ func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (R
 			}
 		}),
 	}
+
+	logging.Info(ctx, "success to get user list", slog.Any("users", resUsers))
 
 	return resUsers, nil
 }
