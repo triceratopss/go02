@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go02/packages/config"
+	"net/url"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -17,12 +18,15 @@ import (
 
 func OpenDB() (*bun.DB, error) {
 
+	encodedDBUser := url.QueryEscape(config.Config.DBUser)
+	encodedDBPassword := url.QueryEscape(config.Config.DBPassword)
+	encodedDBName := url.QueryEscape(config.Config.DBName)
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		config.Config.DBUser,
-		config.Config.DBPassword,
+		encodedDBUser,
+		encodedDBPassword,
 		config.Config.DBHost,
 		config.Config.DBPort,
-		config.Config.DBName,
+		encodedDBName,
 	)
 	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 
