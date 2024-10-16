@@ -8,6 +8,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/uptrace/bun"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type UserRepository interface {
@@ -64,6 +66,13 @@ func (r *userRepository) Delete(ctx context.Context, userID int) error {
 
 // GetList Userの複数件取得
 func (r *userRepository) GetList(ctx context.Context, limit int, offset int) ([]model.User, error) {
+	tracer := otel.Tracer("repository")
+	ctx, span := tracer.Start(ctx, "userRepository.GetList")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("db.operation", "select"))
+	span.SetAttributes(attribute.String("db.table", "users"))
+
 	users := make([]model.User, 0, limit)
 
 	if err := r.conn.NewSelect().Model(&users).Limit(limit).Offset(offset).Scan(ctx); err != nil {

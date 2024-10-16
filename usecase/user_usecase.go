@@ -7,6 +7,7 @@ import (
 	"go02/repository"
 
 	"github.com/samber/lo"
+	"go.opentelemetry.io/otel"
 )
 
 // UserUsecase User 関係のusecaseのinterface
@@ -135,6 +136,10 @@ func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
 }
 
 func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (ResGetUserList, error) {
+	tracer := otel.Tracer("usecase")
+	ctx, span := tracer.Start(ctx, "userUsecase.GetUserList")
+	defer span.End()
+
 	resUsers := ResGetUserList{
 		Users: []ResGetUser{},
 	}

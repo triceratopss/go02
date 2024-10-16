@@ -77,19 +77,19 @@ func log(ctx context.Context, level slog.Level, msg string, args ...any) {
 	_ = logger.Handler().Handle(ctx, r)
 }
 
-func Info(msg string, args ...any) {
-	log(context.Background(), slog.LevelInfo, msg, args...)
+func Info(ctx context.Context, msg string, args ...any) {
+	log(ctx, slog.LevelInfo, msg, args...)
 }
 
-func Infof(format string, args ...any) {
-	log(context.Background(), slog.LevelInfo, fmt.Sprintf(format, args...))
+func Infof(ctx context.Context, format string, args ...any) {
+	log(ctx, slog.LevelInfo, fmt.Sprintf(format, args...))
 }
 
-func Error(err error, msg string, args ...any) {
+func Error(ctx context.Context, err error, msg string, args ...any) {
 	args = append(args, apperrors.LogStackTrace(err))
-	log(context.Background(), slog.LevelError, msg, args...)
+	log(ctx, slog.LevelError, msg, args...)
 }
 
-func Errorf(err error, format string, args ...any) {
-	log(context.Background(), slog.LevelError, fmt.Sprintf(format, args...), apperrors.LogStackTrace(err))
+func Errorf(ctx context.Context, err error, format string, args ...any) {
+	log(ctx, slog.LevelError, fmt.Sprintf(format, args...), apperrors.LogStackTrace(err))
 }
