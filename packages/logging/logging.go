@@ -8,33 +8,55 @@ import (
 	"os"
 	"runtime"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 func Init() {
-	opt := slog.HandlerOptions{
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource:   true,
-		ReplaceAttr: replaceAttr,
-	}
-
-	if os.Getenv("ENV") == "local" {
-		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &opt)))
-		return
-	}
-
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &opt)))
+		ReplaceAttr: replacer,
+	})
+	instrumentedHandler := handlerWithSpanContext(jsonHandler)
+	slog.SetDefault(slog.New(instrumentedHandler))
 }
 
-func replaceAttr(groups []string, a slog.Attr) slog.Attr {
+func handlerWithSpanContext(handler slog.Handler) *spanContextLogHandler {
+	return &spanContextLogHandler{Handler: handler}
+}
+
+type spanContextLogHandler struct {
+	slog.Handler
+}
+
+func (t *spanContextLogHandler) Handle(ctx context.Context, record slog.Record) error {
+	if s := trace.SpanContextFromContext(ctx); s.IsValid() {
+		record.AddAttrs(
+			slog.Any("logging.googleapis.com/trace", s.TraceID()),
+		)
+		record.AddAttrs(
+			slog.Any("logging.googleapis.com/spanId", s.SpanID()),
+		)
+		record.AddAttrs(
+			slog.Bool("logging.googleapis.com/trace_sampled", s.TraceFlags().IsSampled()),
+		)
+	}
+	return t.Handler.Handle(ctx, record)
+}
+
+func replacer(groups []string, a slog.Attr) slog.Attr {
 	switch a.Key {
 	case slog.LevelKey:
-		return slog.String("severity", a.Value.String())
-	case slog.MessageKey:
-		return slog.String("message", a.Value.String())
-	case slog.SourceKey:
-		return slog.Attr{
-			Key:   "logging.googleapis.com/sourceLocation",
-			Value: a.Value,
+		a.Key = "severity"
+		if level := a.Value.Any().(slog.Level); level == slog.LevelWarn {
+			a.Value = slog.StringValue("WARNING")
 		}
+	case slog.TimeKey:
+		a.Key = "timestamp"
+	case slog.MessageKey:
+		a.Key = "message"
+	case slog.SourceKey:
+		a.Key = "logging.googleapis.com/sourceLocation"
 	}
 
 	return a
