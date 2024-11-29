@@ -19,7 +19,7 @@ COPY go.* ./
 RUN go mod download
 
 COPY . ./
-RUN go build -o "go02" -ldflags="-w -s"
+RUN go build -o "go02" -ldflags="-w -s" ./cmd/api
 
 
 # runtime continer
