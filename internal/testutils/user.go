@@ -2,7 +2,7 @@ package testutils
 
 import (
 	"context"
-	"go02/model"
+	"go02/internal/model"
 	"testing"
 
 	"github.com/uptrace/bun"

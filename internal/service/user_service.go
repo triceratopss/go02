@@ -1,19 +1,18 @@
-package usecase
+package service
 
 import (
 	"context"
-	"go02/model"
-	"go02/packages/apperrors"
-	"go02/packages/logging"
-	"go02/repository"
+	"go02/internal/model"
+	"go02/internal/package/apperrors"
+	"go02/internal/package/logging"
+	"go02/internal/repository"
 	"log/slog"
 
 	"github.com/samber/lo"
 	"go.opentelemetry.io/otel"
 )
 
-// UserUsecase User 関係のusecaseのinterface
-type UserUsecase interface {
+type UserService interface {
 	CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error
 	UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error
 	DeleteUser(ctx context.Context, ID int) error
@@ -21,19 +20,18 @@ type UserUsecase interface {
 	GetUserOne(ctx context.Context, ID int) (ResGetUser, error)
 }
 
-type userUsecase struct {
+type userService struct {
 	transactionRepository repository.TransactionRepository
 	userRepository        repository.UserRepository
 	profileRepository     repository.ProfileRepository
 }
 
-// NewUserUsecase User usecaseのコンストラクタ
-func NewUserUsecase(
+func NewUserService(
 	transactionRepository repository.TransactionRepository,
 	userRepository repository.UserRepository,
 	profileRepository repository.ProfileRepository,
-) UserUsecase {
-	return &userUsecase{
+) UserService {
+	return &userService{
 		transactionRepository: transactionRepository,
 		userRepository:        userRepository,
 		profileRepository:     profileRepository,
@@ -57,7 +55,7 @@ type ResGetUser struct {
 	Age  int    `json:"age"`
 }
 
-func (u *userUsecase) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
+func (u *userService) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
 
 	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := model.NewUser(name, age)
@@ -89,7 +87,7 @@ func (u *userUsecase) CreateUser(ctx context.Context, name string, age int, bio 
 	return nil
 }
 
-func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
+func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
 
 	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := u.userRepository.GetOne(ctx, ID)
@@ -127,7 +125,7 @@ func (u *userUsecase) UpdateUser(ctx context.Context, ID int, name string, age i
 	return nil
 }
 
-func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
+func (u *userService) DeleteUser(ctx context.Context, ID int) error {
 
 	err := u.userRepository.Delete(ctx, ID)
 	if err != nil {
@@ -137,9 +135,9 @@ func (u *userUsecase) DeleteUser(ctx context.Context, ID int) error {
 	return nil
 }
 
-func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (ResGetUserList, error) {
-	tracer := otel.Tracer("usecase")
-	ctx, span := tracer.Start(ctx, "userUsecase.GetUserList")
+func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (ResGetUserList, error) {
+	tracer := otel.Tracer("service")
+	ctx, span := tracer.Start(ctx, "userService.GetUserList")
 	defer span.End()
 
 	resUsers := ResGetUserList{
@@ -172,7 +170,7 @@ func (u *userUsecase) GetUserList(ctx context.Context, limit int, offset int) (R
 	return resUsers, nil
 }
 
-func (u *userUsecase) GetUserOne(ctx context.Context, ID int) (ResGetUser, error) {
+func (u *userService) GetUserOne(ctx context.Context, ID int) (ResGetUser, error) {
 	var resUser ResGetUser
 
 	user, err := u.userRepository.GetOne(ctx, ID)

@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"go02/model"
-	"go02/packages/apperrors"
-	"go02/packages/db"
+	"go02/internal/model"
+	"go02/internal/package/apperrors"
+	"go02/internal/package/db"
 
 	"github.com/uptrace/bun"
 )

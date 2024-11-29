@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"go02/interface/router"
-	"go02/middleware"
-	"go02/packages/config"
-	"go02/packages/db"
-	"go02/packages/logging"
-	"go02/packages/tracer"
+	"go02/internal/middleware"
+	"go02/internal/package/config"
+	"go02/internal/package/db"
+	"go02/internal/package/logging"
+	"go02/internal/package/tracer"
+	"go02/internal/router"
 	"log"
 	"net/http"
 

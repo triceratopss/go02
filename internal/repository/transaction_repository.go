@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"go02/packages/apperrors"
-	"go02/packages/db"
+	"go02/internal/package/apperrors"
+	"go02/internal/package/db"
 
 	"github.com/cockroachdb/errors"
 	"github.com/uptrace/bun"

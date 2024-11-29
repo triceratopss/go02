@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"go02/packages/apperrors"
-	"go02/packages/logging"
-	"go02/usecase"
+	"go02/internal/package/apperrors"
+	"go02/internal/package/logging"
+	"go02/internal/service"
 
 	"github.com/labstack/echo/v4"
 	"go.opentelemetry.io/otel"
@@ -22,12 +22,12 @@ type UserHandler interface {
 }
 
 type userHandler struct {
-	userUsecase usecase.UserUsecase
+	userService service.UserService
 }
 
-func NewUserHandler(userUsecase usecase.UserUsecase) UserHandler {
+func NewUserHandler(userService service.UserService) UserHandler {
 	return &userHandler{
-		userUsecase: userUsecase,
+		userService: userService,
 	}
 }
 
@@ -48,7 +48,7 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 		})
 	}
 
-	err := h.userUsecase.CreateUser(ctx, params.Name, params.Age, params.Bio, params.AvatarURL)
+	err := h.userService.CreateUser(ctx, params.Name, params.Age, params.Bio, params.AvatarURL)
 	if err != nil {
 		logging.Errorf(ctx, err, "failed to CreateUser: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
@@ -86,7 +86,7 @@ func (h *userHandler) UpdateUser(c echo.Context) error {
 		})
 	}
 
-	if err := h.userUsecase.UpdateUser(ctx, id, params.Name, params.Age, params.Bio, params.AvatarURL); err != nil {
+	if err := h.userService.UpdateUser(ctx, id, params.Name, params.Age, params.Bio, params.AvatarURL); err != nil {
 		logging.Errorf(ctx, err, "failed to UpdateUser: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to update user",
@@ -109,7 +109,7 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 		})
 	}
 
-	if err := h.userUsecase.DeleteUser(ctx, id); err != nil {
+	if err := h.userService.DeleteUser(ctx, id); err != nil {
 		logging.Errorf(ctx, err, "failed to DeleteUser: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{
 			"message": "failed to delete user",
@@ -139,7 +139,7 @@ func (h *userHandler) GetUserList(c echo.Context) error {
 		})
 	}
 
-	resUsers, err := h.userUsecase.GetUserList(ctx, params.Limit, params.Offset)
+	resUsers, err := h.userService.GetUserList(ctx, params.Limit, params.Offset)
 	if err != nil && !errors.Is(err, apperrors.ErrNotFound) {
 		logging.Errorf(ctx, err, "failed to GetUserList: %s", err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, map[string]any{
@@ -161,7 +161,7 @@ func (h *userHandler) GetUserOne(c echo.Context) error {
 		})
 	}
 
-	resUser, err := h.userUsecase.GetUserOne(ctx, id)
+	resUser, err := h.userService.GetUserOne(ctx, id)
 	if err != nil {
 		logging.Errorf(ctx, err, "failed to GetUserOne: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, map[string]any{

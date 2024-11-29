@@ -3,7 +3,7 @@ package logging
 import (
 	"context"
 	"fmt"
-	"go02/packages/apperrors"
+	"go02/internal/package/apperrors"
 	"log/slog"
 	"os"
 	"runtime"

@@ -83,7 +83,7 @@ func MigrateUp(t *testing.T, dsn string) error {
 	t.Helper()
 
 	_, filename, _, _ := runtime.Caller(0)
-	projectRoot := filepath.Dir(filepath.Dir(filename))
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(filename)))
 	migrationsPath := filepath.Join(projectRoot, "db-migration", "migrations")
 	sourceURL := "file://" + migrationsPath
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"go02/packages/config"
+	"go02/internal/package/config"
 	"time"
 
 	"github.com/uptrace/bun"

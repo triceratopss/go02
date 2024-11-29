@@ -2,11 +2,11 @@ package handler_test
 
 import (
 	"context"
-	"go02/interface/handler"
-	"go02/model"
-	"go02/repository"
-	"go02/testutils"
-	"go02/usecase"
+	"go02/internal/handler"
+	"go02/internal/model"
+	"go02/internal/repository"
+	"go02/internal/service"
+	"go02/internal/testutils"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -110,8 +110,8 @@ func TestGetUserList(t *testing.T) {
 			transactionRepository := repository.NewTransactionRepository(db)
 			userRepository := repository.NewUserRepository(db)
 			profileRepository := repository.NewProfileRepository(db)
-			userUsecase := usecase.NewUserUsecase(transactionRepository, userRepository, profileRepository)
-			userHandler := handler.NewUserHandler(userUsecase)
+			userService := service.NewUserService(transactionRepository, userRepository, profileRepository)
+			userHandler := handler.NewUserHandler(userService)
 
 			// Act
 			err = userHandler.GetUserList(c)
