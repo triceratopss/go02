@@ -1,4 +1,4 @@
-FROM golang:1.22-bookworm AS debug
+FROM golang:1.23-bookworm AS debug
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . /app
 CMD ["air", "-c", ".air.toml"]
 
 # build continer
-FROM golang:1.22-bookworm AS builder
+FROM golang:1.23-bookworm AS builder
 
 WORKDIR /tmp/app
 

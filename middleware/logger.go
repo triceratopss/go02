@@ -1,10 +1,8 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -41,15 +39,7 @@ func MakeDuration(d time.Duration) Duration {
 }
 
 func Logger() echo.MiddlewareFunc {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			switch a.Key {
-			case slog.LevelKey:
-				return slog.String("severity", a.Value.String())
-			}
-			return a
-		},
-	}))
+	logger := slog.Default()
 	return echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
 		LogMethod:        true,
 		LogURI:           true,
@@ -64,6 +54,8 @@ func Logger() echo.MiddlewareFunc {
 		LogError:         true,
 		HandleError:      true,
 		LogValuesFunc: func(c echo.Context, v echomiddleware.RequestLoggerValues) error {
+			ctx := c.Request().Context()
+
 			if v.Error == nil {
 				httpRequest := HTTPRequest{
 					RequestMethod: v.Method,
@@ -77,7 +69,7 @@ func Logger() echo.MiddlewareFunc {
 					Latency:       MakeDuration(v.Latency),
 					Protocol:      v.Protocol,
 				}
-				logger.LogAttrs(context.Background(), slog.LevelInfo, "request",
+				logger.LogAttrs(ctx, slog.LevelInfo, "request",
 					slog.Any("httpRequest", httpRequest),
 				)
 			} else {
@@ -93,7 +85,7 @@ func Logger() echo.MiddlewareFunc {
 					Latency:       MakeDuration(v.Latency),
 					Protocol:      v.Protocol,
 				}
-				logger.LogAttrs(context.Background(), slog.LevelError, "request error",
+				logger.LogAttrs(ctx, slog.LevelError, "request error",
 					slog.Any("httpRequest", httpRequest),
 					slog.Any("err", v.Error.Error()),
 				)

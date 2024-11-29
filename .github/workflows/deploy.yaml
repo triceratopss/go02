@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/opentelemetry
 
 env:
   ARTIFACT_HOST: ${{ vars.ARTIFACT_HOST }}
