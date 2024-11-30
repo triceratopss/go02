@@ -2,13 +2,13 @@ package testutils
 
 import (
 	"context"
-	"go02/internal/model"
+	"go02/internal/features/user"
 	"testing"
 
 	"github.com/uptrace/bun"
 )
 
-func PrepareTestDataForTestGetUserList(t *testing.T, db *bun.DB, users []model.User) {
+func PrepareTestDataForTestGetUserList(t *testing.T, db *bun.DB, users []user.User) {
 	t.Helper()
 
 	if len(users) == 0 {

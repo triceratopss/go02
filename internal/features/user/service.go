@@ -1,9 +1,7 @@
-package service
+package user
 
 import (
 	"context"
-	"go02/internal/dto"
-	"go02/internal/model"
 	"go02/internal/package/apperrors"
 	"go02/internal/package/logging"
 	"go02/internal/repository"
@@ -17,32 +15,29 @@ type UserService interface {
 	CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error
 	UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error
 	DeleteUser(ctx context.Context, ID int) error
-	GetUserList(ctx context.Context, limit int, offset int) (dto.GetUserListResponse, error)
-	GetUserOne(ctx context.Context, ID int) (dto.GetUserResponse, error)
+	GetUserList(ctx context.Context, limit int, offset int) (GetUserListResponse, error)
+	GetUserOne(ctx context.Context, ID int) (GetUserResponse, error)
 }
 
 type userService struct {
 	transactionRepository repository.TransactionRepository
-	userRepository        repository.UserRepository
-	profileRepository     repository.ProfileRepository
+	userRepository        UserRepository
 }
 
 func NewUserService(
 	transactionRepository repository.TransactionRepository,
-	userRepository repository.UserRepository,
-	profileRepository repository.ProfileRepository,
+	userRepository UserRepository,
 ) UserService {
 	return &userService{
 		transactionRepository: transactionRepository,
 		userRepository:        userRepository,
-		profileRepository:     profileRepository,
 	}
 }
 
 func (u *userService) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
 
 	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
-		user, err := model.NewUser(name, age)
+		user, err := NewUser(name, age)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -52,12 +47,12 @@ func (u *userService) CreateUser(ctx context.Context, name string, age int, bio 
 			return apperrors.WithStack(err)
 		}
 
-		profile, err := model.NewProfile(user.ID, bio, avatarURL)
+		profile, err := NewProfile(user.ID, bio, avatarURL)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
 
-		_, err = u.profileRepository.Create(ctx, profile)
+		_, err = u.userRepository.CreateProfile(ctx, profile)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -87,7 +82,7 @@ func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age i
 			return apperrors.WithStack(err)
 		}
 
-		profile, err := u.profileRepository.GetProfileByUserID(ctx, ID)
+		profile, err := u.userRepository.GetProfileByUserID(ctx, ID)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -95,7 +90,7 @@ func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age i
 		profile.Bio = bio
 		profile.AvatarURL = avatarURL
 
-		err = u.profileRepository.Update(ctx, &profile)
+		err = u.userRepository.UpdateProfile(ctx, &profile)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -119,13 +114,13 @@ func (u *userService) DeleteUser(ctx context.Context, ID int) error {
 	return nil
 }
 
-func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (dto.GetUserListResponse, error) {
+func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (GetUserListResponse, error) {
 	tracer := otel.Tracer("service")
 	ctx, span := tracer.Start(ctx, "userService.GetUserList")
 	defer span.End()
 
-	resUsers := dto.GetUserListResponse{
-		Users: []dto.GetUserResponse{},
+	resUsers := GetUserListResponse{
+		Users: []GetUserResponse{},
 	}
 
 	// limit default is 100
@@ -139,9 +134,9 @@ func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (d
 		return resUsers, apperrors.WithStack(err)
 	}
 
-	resUsers = dto.GetUserListResponse{
-		Users: lo.Map(users, func(u model.User, _ int) dto.GetUserResponse {
-			return dto.GetUserResponse{
+	resUsers = GetUserListResponse{
+		Users: lo.Map(users, func(u User, _ int) GetUserResponse {
+			return GetUserResponse{
 				ID:   u.ID,
 				Name: u.Name,
 				Age:  u.Age,
@@ -154,15 +149,15 @@ func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (d
 	return resUsers, nil
 }
 
-func (u *userService) GetUserOne(ctx context.Context, ID int) (dto.GetUserResponse, error) {
-	var resUser dto.GetUserResponse
+func (u *userService) GetUserOne(ctx context.Context, ID int) (GetUserResponse, error) {
+	var resUser GetUserResponse
 
 	user, err := u.userRepository.GetOne(ctx, ID)
 	if err != nil {
 		return resUser, apperrors.WithStack(err)
 	}
 
-	resUser = dto.GetUserResponse{
+	resUser = GetUserResponse{
 		ID:   user.ID,
 		Name: user.Name,
 		Age:  user.Age,

@@ -1,11 +1,9 @@
-package handler_test
+package user_test
 
 import (
 	"context"
-	"go02/internal/handler"
-	"go02/internal/model"
+	"go02/internal/features/user"
 	"go02/internal/repository"
-	"go02/internal/service"
 	"go02/internal/testutils"
 	"net/http"
 	"net/http/httptest"
@@ -30,7 +28,7 @@ func TestGetUserList(t *testing.T) {
 		wantError        bool
 		expectedStatus   int
 		expectedFilePath string
-		testData         []model.User
+		testData         []user.User
 	}{
 		{
 			name:             "正常系: アイテムが存在する場合",
@@ -38,7 +36,7 @@ func TestGetUserList(t *testing.T) {
 			wantError:        false,
 			expectedStatus:   http.StatusOK,
 			expectedFilePath: "testdata/get_users/ok_res.golden.json",
-			testData: []model.User{
+			testData: []user.User{
 				{ID: 1, Name: "taro", Age: 24},
 				{ID: 2, Name: "takeshi", Age: 20},
 			},
@@ -49,7 +47,7 @@ func TestGetUserList(t *testing.T) {
 			wantError:        false,
 			expectedStatus:   http.StatusOK,
 			expectedFilePath: "testdata/get_users/ok_res_empty.golden.json",
-			testData:         []model.User{},
+			testData:         []user.User{},
 		},
 		{
 			name:             "正常系: アイテムが存在し、クエリパラメータが指定されている場合",
@@ -57,7 +55,7 @@ func TestGetUserList(t *testing.T) {
 			wantError:        false,
 			expectedStatus:   http.StatusOK,
 			expectedFilePath: "testdata/get_users/ok_res_query_param.golden.json",
-			testData: []model.User{
+			testData: []user.User{
 				{ID: 1, Name: "taro", Age: 24},
 				{ID: 2, Name: "takeshi", Age: 20},
 				{ID: 3, Name: "hanako", Age: 21},
@@ -72,7 +70,7 @@ func TestGetUserList(t *testing.T) {
 			wantError:        true,
 			expectedStatus:   http.StatusBadRequest,
 			expectedFilePath: "testdata/get_users/err_res_400.golden.json",
-			testData:         []model.User{},
+			testData:         []user.User{},
 		},
 	}
 
@@ -108,10 +106,9 @@ func TestGetUserList(t *testing.T) {
 			c := e.NewContext(req, rec)
 
 			transactionRepository := repository.NewTransactionRepository(db)
-			userRepository := repository.NewUserRepository(db)
-			profileRepository := repository.NewProfileRepository(db)
-			userService := service.NewUserService(transactionRepository, userRepository, profileRepository)
-			userHandler := handler.NewUserHandler(userService)
+			userRepository := user.NewUserRepository(db)
+			userService := user.NewUserService(transactionRepository, userRepository)
+			userHandler := user.NewUserHandler(userService)
 
 			// Act
 			err = userHandler.GetUserList(c)

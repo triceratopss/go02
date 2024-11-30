@@ -1,4 +1,4 @@
-package handler
+package user
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 
 	"go02/internal/package/apperrors"
 	"go02/internal/package/logging"
-	"go02/internal/service"
 
 	"github.com/labstack/echo/v4"
 	"go.opentelemetry.io/otel"
@@ -22,10 +21,10 @@ type UserHandler interface {
 }
 
 type userHandler struct {
-	userService service.UserService
+	userService UserService
 }
 
-func NewUserHandler(userService service.UserService) UserHandler {
+func NewUserHandler(userService UserService) UserHandler {
 	return &userHandler{
 		userService: userService,
 	}

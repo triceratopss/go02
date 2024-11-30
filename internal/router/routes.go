@@ -1,9 +1,8 @@
 package router
 
 import (
-	"go02/internal/handler"
+	"go02/internal/features/user"
 	"go02/internal/repository"
-	"go02/internal/service"
 
 	"github.com/labstack/echo/v4"
 	"github.com/uptrace/bun"
@@ -12,10 +11,9 @@ import (
 func Init(e *echo.Echo, db *bun.DB) {
 
 	transactionRepository := repository.NewTransactionRepository(db)
-	userRepository := repository.NewUserRepository(db)
-	profileRepository := repository.NewProfileRepository(db)
-	userService := service.NewUserService(transactionRepository, userRepository, profileRepository)
-	userHandler := handler.NewUserHandler(userService)
+	userRepository := user.NewUserRepository(db)
+	userService := user.NewUserService(transactionRepository, userRepository)
+	userHandler := user.NewUserHandler(userService)
 
 	e.POST("/users", userHandler.CreateUser)
 	e.GET("/users", userHandler.GetUserList)
