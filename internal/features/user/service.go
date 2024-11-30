@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type UserService interface {
+type Service interface {
 	CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error
 	UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error
 	DeleteUser(ctx context.Context, ID int) error
@@ -19,22 +19,22 @@ type UserService interface {
 	GetUserOne(ctx context.Context, ID int) (GetUserResponse, error)
 }
 
-type userService struct {
+type service struct {
 	transaction    db.Transaction
-	userRepository UserRepository
+	userRepository Repository
 }
 
-func NewUserService(
+func NewService(
 	transaction db.Transaction,
-	userRepository UserRepository,
-) UserService {
-	return &userService{
+	userRepository Repository,
+) Service {
+	return &service{
 		transaction:    transaction,
 		userRepository: userRepository,
 	}
 }
 
-func (u *userService) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
+func (u *service) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
 
 	err := u.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := NewUser(name, age)
@@ -42,7 +42,7 @@ func (u *userService) CreateUser(ctx context.Context, name string, age int, bio 
 			return apperrors.WithStack(err)
 		}
 
-		_, err = u.userRepository.Create(ctx, user)
+		_, err = u.userRepository.CreateUser(ctx, user)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -66,10 +66,10 @@ func (u *userService) CreateUser(ctx context.Context, name string, age int, bio 
 	return nil
 }
 
-func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
+func (u *service) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
 
 	err := u.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
-		user, err := u.userRepository.GetOne(ctx, ID)
+		user, err := u.userRepository.GetUserOne(ctx, ID)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -77,7 +77,7 @@ func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age i
 		user.Name = name
 		user.Age = age
 
-		err = u.userRepository.Update(ctx, &user)
+		err = u.userRepository.UpdateUser(ctx, &user)
 		if err != nil {
 			return apperrors.WithStack(err)
 		}
@@ -104,9 +104,9 @@ func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age i
 	return nil
 }
 
-func (u *userService) DeleteUser(ctx context.Context, ID int) error {
+func (u *service) DeleteUser(ctx context.Context, ID int) error {
 
-	err := u.userRepository.Delete(ctx, ID)
+	err := u.userRepository.DeleteUser(ctx, ID)
 	if err != nil {
 		return apperrors.WithStack(err)
 	}
@@ -114,7 +114,7 @@ func (u *userService) DeleteUser(ctx context.Context, ID int) error {
 	return nil
 }
 
-func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (GetUserListResponse, error) {
+func (u *service) GetUserList(ctx context.Context, limit int, offset int) (GetUserListResponse, error) {
 	tracer := otel.Tracer("service")
 	ctx, span := tracer.Start(ctx, "userService.GetUserList")
 	defer span.End()
@@ -129,7 +129,7 @@ func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (G
 		l = 100
 	}
 
-	users, err := u.userRepository.GetList(ctx, l, offset)
+	users, err := u.userRepository.GetUserList(ctx, l, offset)
 	if err != nil {
 		return resUsers, apperrors.WithStack(err)
 	}
@@ -149,10 +149,10 @@ func (u *userService) GetUserList(ctx context.Context, limit int, offset int) (G
 	return resUsers, nil
 }
 
-func (u *userService) GetUserOne(ctx context.Context, ID int) (GetUserResponse, error) {
+func (u *service) GetUserOne(ctx context.Context, ID int) (GetUserResponse, error) {
 	var resUser GetUserResponse
 
-	user, err := u.userRepository.GetOne(ctx, ID)
+	user, err := u.userRepository.GetUserOne(ctx, ID)
 	if err != nil {
 		return resUser, apperrors.WithStack(err)
 	}

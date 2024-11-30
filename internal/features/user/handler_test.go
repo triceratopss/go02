@@ -106,9 +106,9 @@ func TestGetUserList(t *testing.T) {
 			c := e.NewContext(req, rec)
 
 			transaction := db.NewTransaction(bunDB)
-			userRepository := user.NewUserRepository(bunDB)
-			userService := user.NewUserService(transaction, userRepository)
-			userHandler := user.NewUserHandler(userService)
+			userRepository := user.NewRepository(bunDB)
+			userService := user.NewService(transaction, userRepository)
+			userHandler := user.NewHandler(userService)
 
 			// Act
 			err = userHandler.GetUserList(c)

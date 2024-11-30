@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type UserHandler interface {
+type Handler interface {
 	CreateUser(c echo.Context) error
 	UpdateUser(c echo.Context) error
 	DeleteUser(c echo.Context) error
@@ -20,17 +20,17 @@ type UserHandler interface {
 	GetUserOne(c echo.Context) error
 }
 
-type userHandler struct {
-	userService UserService
+type handler struct {
+	userService Service
 }
 
-func NewUserHandler(userService UserService) UserHandler {
-	return &userHandler{
+func NewHandler(userService Service) Handler {
+	return &handler{
 		userService: userService,
 	}
 }
 
-func (h *userHandler) CreateUser(c echo.Context) error {
+func (h *handler) CreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var params struct {
@@ -60,7 +60,7 @@ func (h *userHandler) CreateUser(c echo.Context) error {
 	})
 }
 
-func (h *userHandler) UpdateUser(c echo.Context) error {
+func (h *handler) UpdateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -97,7 +97,7 @@ func (h *userHandler) UpdateUser(c echo.Context) error {
 	})
 }
 
-func (h *userHandler) DeleteUser(c echo.Context) error {
+func (h *handler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -120,7 +120,7 @@ func (h *userHandler) DeleteUser(c echo.Context) error {
 	})
 }
 
-func (h *userHandler) GetUserList(c echo.Context) error {
+func (h *handler) GetUserList(c echo.Context) error {
 	ctx := c.Request().Context()
 	tracer := otel.Tracer("handler")
 	ctx, span := tracer.Start(ctx, "GetUserList")
@@ -149,7 +149,7 @@ func (h *userHandler) GetUserList(c echo.Context) error {
 	return c.JSON(http.StatusOK, resUsers)
 }
 
-func (h *userHandler) GetUserOne(c echo.Context) error {
+func (h *handler) GetUserOne(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id, err := strconv.Atoi(c.Param("id"))

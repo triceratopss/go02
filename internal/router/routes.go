@@ -11,9 +11,9 @@ import (
 func Init(e *echo.Echo, bunDB *bun.DB) {
 
 	transaction := db.NewTransaction(bunDB)
-	userRepository := user.NewUserRepository(bunDB)
-	userService := user.NewUserService(transaction, userRepository)
-	userHandler := user.NewUserHandler(userService)
+	userRepository := user.NewRepository(bunDB)
+	userService := user.NewService(transaction, userRepository)
+	userHandler := user.NewHandler(userService)
 
 	e.POST("/users", userHandler.CreateUser)
 	e.GET("/users", userHandler.GetUserList)

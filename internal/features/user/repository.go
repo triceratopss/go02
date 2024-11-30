@@ -11,12 +11,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-type UserRepository interface {
-	Create(ctx context.Context, data *User) (int, error)
-	Update(ctx context.Context, data *User) error
-	Delete(ctx context.Context, userID int) error
-	GetList(ctx context.Context, limit int, offset int) ([]User, error)
-	GetOne(ctx context.Context, userID int) (User, error)
+type Repository interface {
+	CreateUser(ctx context.Context, data *User) (int, error)
+	UpdateUser(ctx context.Context, data *User) error
+	DeleteUser(ctx context.Context, userID int) error
+	GetUserList(ctx context.Context, limit int, offset int) ([]User, error)
+	GetUserOne(ctx context.Context, userID int) (User, error)
 
 	CreateProfile(ctx context.Context, data *Profile) (int, error)
 	UpdateProfile(ctx context.Context, data *Profile) error
@@ -24,18 +24,17 @@ type UserRepository interface {
 	GetProfileByUserID(ctx context.Context, userID int) (Profile, error)
 }
 
-type userRepository struct {
+type repository struct {
 	conn *bun.DB
 }
 
-func NewUserRepository(conn *bun.DB) UserRepository {
-	return &userRepository{
+func NewRepository(conn *bun.DB) Repository {
+	return &repository{
 		conn: conn,
 	}
 }
 
-// Create Userの新規作成
-func (r *userRepository) Create(ctx context.Context, user *User) (int, error) {
+func (r *repository) CreateUser(ctx context.Context, user *User) (int, error) {
 
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewInsert().Model(user).Exec(ctx)
@@ -46,8 +45,7 @@ func (r *userRepository) Create(ctx context.Context, user *User) (int, error) {
 	return user.ID, nil
 }
 
-// Update Userの更新
-func (r *userRepository) Update(ctx context.Context, user *User) error {
+func (r *repository) UpdateUser(ctx context.Context, user *User) error {
 
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewUpdate().Model(user).WherePK().Exec(ctx)
@@ -58,8 +56,7 @@ func (r *userRepository) Update(ctx context.Context, user *User) error {
 	return nil
 }
 
-// Delete Userの削除
-func (r *userRepository) Delete(ctx context.Context, userID int) error {
+func (r *repository) DeleteUser(ctx context.Context, userID int) error {
 	_, err := r.conn.NewDelete().Model(&User{}).Where("id = ?", userID).Exec(ctx)
 	if err != nil {
 		return apperrors.WithStack(err)
@@ -68,10 +65,9 @@ func (r *userRepository) Delete(ctx context.Context, userID int) error {
 	return nil
 }
 
-// GetList Userの複数件取得
-func (r *userRepository) GetList(ctx context.Context, limit int, offset int) ([]User, error) {
+func (r *repository) GetUserList(ctx context.Context, limit int, offset int) ([]User, error) {
 	tracer := otel.Tracer("repository")
-	ctx, span := tracer.Start(ctx, "userRepository.GetList")
+	ctx, span := tracer.Start(ctx, "userRepository.GetUserList")
 	defer span.End()
 
 	span.SetAttributes(attribute.String("db.operation", "select"))
@@ -90,8 +86,7 @@ func (r *userRepository) GetList(ctx context.Context, limit int, offset int) ([]
 	return users, nil
 }
 
-// GetOne Userを1件取得
-func (r *userRepository) GetOne(ctx context.Context, userID int) (User, error) {
+func (r *repository) GetUserOne(ctx context.Context, userID int) (User, error) {
 	var user User
 
 	if err := r.conn.NewSelect().Model(&user).Where("id = ?", userID).Scan(ctx); err != nil {
@@ -101,7 +96,7 @@ func (r *userRepository) GetOne(ctx context.Context, userID int) (User, error) {
 	return user, nil
 }
 
-func (r *userRepository) CreateProfile(ctx context.Context, profile *Profile) (int, error) {
+func (r *repository) CreateProfile(ctx context.Context, profile *Profile) (int, error) {
 
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewInsert().Model(profile).Exec(ctx)
@@ -112,7 +107,7 @@ func (r *userRepository) CreateProfile(ctx context.Context, profile *Profile) (i
 	return profile.ID, nil
 }
 
-func (r *userRepository) UpdateProfile(ctx context.Context, profile *Profile) error {
+func (r *repository) UpdateProfile(ctx context.Context, profile *Profile) error {
 
 	tx := db.GetTxOrDB(ctx, r.conn)
 	_, err := tx.NewUpdate().Model(profile).WherePK().Exec(ctx)
@@ -123,7 +118,7 @@ func (r *userRepository) UpdateProfile(ctx context.Context, profile *Profile) er
 	return nil
 }
 
-func (r *userRepository) DeleteProfile(ctx context.Context, profileID int) error {
+func (r *repository) DeleteProfile(ctx context.Context, profileID int) error {
 	_, err := r.conn.NewDelete().Model(&Profile{}).Where("id = ?", profileID).Exec(ctx)
 	if err != nil {
 		return apperrors.WithStack(err)
@@ -132,7 +127,7 @@ func (r *userRepository) DeleteProfile(ctx context.Context, profileID int) error
 	return nil
 }
 
-func (r *userRepository) GetProfileByUserID(ctx context.Context, userID int) (Profile, error) {
+func (r *repository) GetProfileByUserID(ctx context.Context, userID int) (Profile, error) {
 	var profile Profile
 
 	if err := r.conn.NewSelect().Model(&profile).Where("user_id = ?", userID).Scan(ctx); err != nil {
