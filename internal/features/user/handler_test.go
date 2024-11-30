@@ -3,7 +3,7 @@ package user_test
 import (
 	"context"
 	"go02/internal/features/user"
-	"go02/internal/repository"
+	"go02/internal/package/db"
 	"go02/internal/testutils"
 	"net/http"
 	"net/http/httptest"
@@ -84,7 +84,7 @@ func TestGetUserList(t *testing.T) {
 			container := testutils.PrepareContainer(context.Background(), t)
 			defer container.TearDown()
 
-			db, err := testutils.OpenDBForTest(t, container.DSN)
+			bunDB, err := testutils.OpenDBForTest(t, container.DSN)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -93,7 +93,7 @@ func TestGetUserList(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			testutils.PrepareTestDataForTestGetUserList(t, db, tt.testData)
+			testutils.PrepareTestDataForTestGetUserList(t, bunDB, tt.testData)
 
 			e := echo.New()
 
@@ -105,9 +105,9 @@ func TestGetUserList(t *testing.T) {
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 
-			transactionRepository := repository.NewTransactionRepository(db)
-			userRepository := user.NewUserRepository(db)
-			userService := user.NewUserService(transactionRepository, userRepository)
+			transaction := db.NewTransaction(bunDB)
+			userRepository := user.NewUserRepository(bunDB)
+			userService := user.NewUserService(transaction, userRepository)
 			userHandler := user.NewUserHandler(userService)
 
 			// Act

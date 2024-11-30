@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 	"go02/internal/package/apperrors"
+	"go02/internal/package/db"
 	"go02/internal/package/logging"
-	"go02/internal/repository"
 	"log/slog"
 
 	"github.com/samber/lo"
@@ -20,23 +20,23 @@ type UserService interface {
 }
 
 type userService struct {
-	transactionRepository repository.TransactionRepository
-	userRepository        UserRepository
+	transaction    db.Transaction
+	userRepository UserRepository
 }
 
 func NewUserService(
-	transactionRepository repository.TransactionRepository,
+	transaction db.Transaction,
 	userRepository UserRepository,
 ) UserService {
 	return &userService{
-		transactionRepository: transactionRepository,
-		userRepository:        userRepository,
+		transaction:    transaction,
+		userRepository: userRepository,
 	}
 }
 
 func (u *userService) CreateUser(ctx context.Context, name string, age int, bio string, avatarURL string) error {
 
-	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
+	err := u.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := NewUser(name, age)
 		if err != nil {
 			return apperrors.WithStack(err)
@@ -68,7 +68,7 @@ func (u *userService) CreateUser(ctx context.Context, name string, age int, bio 
 
 func (u *userService) UpdateUser(ctx context.Context, ID int, name string, age int, bio string, avatarURL string) error {
 
-	err := u.transactionRepository.WithinTransaction(ctx, func(ctx context.Context) error {
+	err := u.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := u.userRepository.GetOne(ctx, ID)
 		if err != nil {
 			return apperrors.WithStack(err)

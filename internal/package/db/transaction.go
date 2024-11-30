@@ -1,31 +1,30 @@
-package repository
+package db
 
 import (
 	"context"
 	"database/sql"
 	"go02/internal/package/apperrors"
-	"go02/internal/package/db"
 
 	"github.com/cockroachdb/errors"
 	"github.com/uptrace/bun"
 )
 
-type TransactionRepository interface {
+type Transaction interface {
 	WithinTransaction(ctx context.Context, f func(ctx context.Context) error) (err error)
 }
 
-func NewTransactionRepository(conn *bun.DB) TransactionRepository {
-	return &transactionRepository{
+func NewTransaction(conn *bun.DB) Transaction {
+	return &transaction{
 		conn: conn,
 	}
 }
 
-type transactionRepository struct {
+type transaction struct {
 	conn *bun.DB
 }
 
-func (r *transactionRepository) WithinTransaction(ctx context.Context, f func(ctx context.Context) error) (err error) {
-	tx, err := db.GetTxOrDB(ctx, r.conn).BeginTx(ctx, &sql.TxOptions{})
+func (r *transaction) WithinTransaction(ctx context.Context, f func(ctx context.Context) error) (err error) {
+	tx, err := GetTxOrDB(ctx, r.conn).BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return apperrors.WithStack(err)
 	}
@@ -37,7 +36,7 @@ func (r *transactionRepository) WithinTransaction(ctx context.Context, f func(ct
 		}
 	}()
 
-	err = f(db.SetTx(ctx, &tx))
+	err = f(SetTx(ctx, &tx))
 	if err != nil {
 		tx.Rollback()
 		return apperrors.WithStack(err)
