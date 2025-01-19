@@ -4,7 +4,7 @@ import (
 	"github.com/caarlos0/env/v11"
 )
 
-type config struct {
+type EnvironmentVariables struct {
 	Env        string `env:"ENV" envDefault:"development"`
 	DBHost     string `env:"DB_HOST,notEmpty"`
 	DBPort     string `env:"DB_PORT,notEmpty"`
@@ -13,14 +13,18 @@ type config struct {
 	DBPassword string `env:"DB_PASSWORD,notEmpty"`
 }
 
-var Config config
+var variables EnvironmentVariables
 
 func Init() error {
 	var err error
-	Config, err = env.ParseAs[config]()
+	variables, err = env.ParseAs[EnvironmentVariables]()
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func Get() EnvironmentVariables {
+	return variables
 }

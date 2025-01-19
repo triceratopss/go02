@@ -15,13 +15,14 @@ import (
 )
 
 func OpenDB() (*bun.DB, error) {
+	env := config.Get()
 
 	dsn := fmt.Sprintf("user=%s password=%s database=%s host=%s port=%s sslmode=disable",
-		config.Config.DBUser,
-		config.Config.DBPassword,
-		config.Config.DBName,
-		config.Config.DBHost,
-		config.Config.DBPort,
+		env.DBUser,
+		env.DBPassword,
+		env.DBName,
+		env.DBHost,
+		env.DBPort,
 	)
 
 	sqlDB, err := sql.Open("postgres", dsn)
